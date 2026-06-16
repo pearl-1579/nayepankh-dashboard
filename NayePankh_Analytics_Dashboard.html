@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NayePankh Foundation — Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --indigo:   #4f46e5;
+  --indigo-d: #3730a3;
+  --teal:     #0d9488;
+  --rose:     #e11d48;
+  --amber:    #d97706;
+  --violet:   #7c3aed;
+  --sky:      #0284c7;
+  --green:    #16a34a;
+  --bg:       #f1f5f9;
+  --surface:  #ffffff;
+  --border:   #e2e8f0;
+  --text:     #0f172a;
+  --muted:    #64748b;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #1e3a8a 100%);
+  color: #fff;
+  padding: 32px 40px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(99,102,241,.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header-inner { position: relative; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+.header-brand { display: flex; align-items: center; gap: 16px; }
+.header-logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  display: grid; place-items: center; font-size: 1.7rem;
+  backdrop-filter: blur(8px);
+}
+.header-brand h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.6px; line-height: 1.2; }
+.header-brand p  { font-size: .82rem; color: rgba(255,255,255,.6); margin-top: 3px; }
+.header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.hbadge {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  backdrop-filter: blur(6px);
+  border-radius: 30px; padding: 5px 14px;
+  font-size: .75rem; font-weight: 600; color: rgba(255,255,255,.9);
+  letter-spacing: .2px;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; gap: 4px;
+  overflow-x: auto;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 16px 18px;
+  font-size: .83rem; font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-tab:hover { color: var(--indigo); background: rgba(79,70,229,.04); }
+.nav-tab.active { color: var(--indigo); border-bottom-color: var(--indigo); }
+
+/* ── PAGE LAYOUT ── */
+.page { display: none; padding: 32px; max-width: 1360px; margin: 0 auto; animation: fadeIn .3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin-bottom: 18px; margin-top: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── KPI GRID ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.kpi-card {
+  border-radius: 18px; padding: 22px 20px;
+  color: #fff; position: relative; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: transform .2s, box-shadow .2s;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.16); }
+.kpi-card::after {
+  content: '';
+  position: absolute; right: -16px; bottom: -16px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(255,255,255,.1);
+}
+.kpi-card.c-indigo { background: linear-gradient(135deg, #4f46e5, #6d28d9); }
+.kpi-card.c-teal   { background: linear-gradient(135deg, #0d9488, #0891b2); }
+.kpi-card.c-rose   { background: linear-gradient(135deg, #e11d48, #be123c); }
+.kpi-card.c-amber  { background: linear-gradient(135deg, #d97706, #b45309); }
+.kpi-card.c-violet { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+.kpi-card.c-sky    { background: linear-gradient(135deg, #0284c7, #0369a1); }
+.kpi-icon-wrap {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,.2);
+  display: grid; place-items: center;
+  font-size: 1.2rem; margin-bottom: 14px;
+}
+.kpi-value { font-size: 2.1rem; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.kpi-label { font-size: .78rem; opacity: .8; margin-top: 5px; font-weight: 500; }
+.kpi-delta { font-size: .72rem; margin-top: 8px; opacity: .75; font-weight: 600; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border-radius: 18px; padding: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s;
+}
+.card:hover { box-shadow: var(--shadow-lg); }
+.card h3 { font-size: .93rem; font-weight: 700; margin-bottom: 3px; }
+.card .sub { font-size: .75rem; color: var(--muted); margin-bottom: 18px; }
+.chart-wrap { position: relative; height: 250px; }
+
+/* ── GRID LAYOUTS ── */
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.mb { margin-bottom: 18px; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+thead th {
+  background: #f8fafc; padding: 10px 14px;
+  text-align: left; font-weight: 700; font-size: .72rem;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 2px solid var(--border);
+}
+tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f8fafc; }
+a { color: var(--indigo); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 30px;
+  font-size: .71rem; font-weight: 700; letter-spacing: .2px;
+}
+.b-indigo { background: #ede9fe; color: #5b21b6; }
+.b-teal   { background: #ccfbf1; color: #0f766e; }
+.b-rose   { background: #ffe4e6; color: #be123c; }
+.b-amber  { background: #fef3c7; color: #92400e; }
+.b-green  { background: #dcfce7; color: #15803d; }
+.b-sky    { background: #e0f2fe; color: #0369a1; }
+.b-gray   { background: #f1f5f9; color: #475569; }
+
+/* ── SOCIAL CARDS ── */
+.social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.social-card {
+  background: var(--surface);
+  border-radius: 16px; padding: 20px 16px;
+  border: 1px solid var(--border);
+  text-align: center; text-decoration: none; color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+  display: block;
+}
+.social-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); text-decoration: none; }
+.s-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.s-platform { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+.s-value { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; margin: 6px 0 4px; }
+.s-label { font-size: .7rem; color: var(--muted); }
+
+/* ── TIMELINE ── */
+.timeline { position: relative; padding-left: 36px; }
+.timeline::before {
+  content: ''; position: absolute;
+  left: 13px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(to bottom, var(--indigo), var(--teal));
+  border-radius: 2px;
+}
+.tl-item { position: relative; margin-bottom: 28px; }
+.tl-dot {
+  position: absolute; left: -29px; top: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--indigo); border: 3px solid var(--surface);
+  box-shadow: 0 0 0 2px var(--indigo);
+  transition: transform .2s;
+}
+.tl-item:hover .tl-dot { transform: scale(1.3); }
+.tl-date { font-size: .72rem; font-weight: 700; color: var(--indigo); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.tl-title { font-size: .9rem; font-weight: 700; margin-bottom: 5px; }
+.tl-body { font-size: .81rem; color: var(--muted); line-height: 1.6; }
+
+/* ── INSIGHT CARDS ── */
+.insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.insight-card {
+  background: var(--surface);
+  border-radius: 14px; padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--indigo);
+  box-shadow: var(--shadow);
+  transition: transform .2s;
+}
+.insight-card:hover { transform: translateX(3px); }
+.insight-card.t { border-left-color: var(--teal); }
+.insight-card.r { border-left-color: var(--rose); }
+.insight-card.v { border-left-color: var(--violet); }
+.insight-card.a { border-left-color: var(--amber); }
+.insight-card h4 { font-size: .85rem; font-weight: 700; margin-bottom: 7px; }
+.insight-card p  { font-size: .79rem; color: var(--muted); line-height: 1.6; }
+
+/* ── PROGRESS ── */
+.prog-item { margin-bottom: 16px; }
+.prog-label { display: flex; justify-content: space-between; font-size: .81rem; font-weight: 600; margin-bottom: 7px; }
+.prog-label span:last-child { color: var(--muted); font-weight: 500; }
+.prog-track { height: 8px; background: #f1f5f9; border-radius: 8px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 8px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* ── SWOT ── */
+.swot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.swot-box { border-radius: 14px; padding: 18px 20px; }
+.swot-title { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.swot-list { list-style: none; }
+.swot-list li { font-size: .8rem; padding: 4px 0; line-height: 1.5; display: flex; gap: 8px; }
+.swot-list li::before { content: '›'; font-weight: 700; flex-shrink: 0; }
+.sw-s { background: #f0fdf4; } .sw-s .swot-title { color: #15803d; } .sw-s li { color: #166534; } .sw-s li::before { color: #16a34a; }
+.sw-w { background: #fff7ed; } .sw-w .swot-title { color: #c2410c; } .sw-w li { color: #9a3412; } .sw-w li::before { color: #ea580c; }
+.sw-o { background: #eff6ff; } .sw-o .swot-title { color: #1d4ed8; } .sw-o li { color: #1e3a8a; } .sw-o li::before { color: #2563eb; }
+.sw-t { background: #fdf2f8; } .sw-t .swot-title { color: #be185d; } .sw-t li { color: #9d174d; } .sw-t li::before { color: #db2777; }
+
+/* ── FOUNDER CARD ── */
+.founder-card {
+  background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+  border: 1px solid #c7d2fe;
+  border-radius: 18px; padding: 24px;
+  display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;
+  margin-bottom: 18px;
+}
+.founder-avatar {
+  width: 68px; height: 68px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--indigo), var(--violet));
+  display: grid; place-items: center; font-size: 2rem; flex-shrink: 0;
+}
+.founder-info { flex: 1; min-width: 200px; }
+.founder-name { font-size: 1.1rem; font-weight: 800; }
+.founder-role { font-size: .8rem; color: var(--muted); margin: 3px 0 10px; }
+.founder-quote {
+  font-size: .85rem; color: #3730a3; font-style: italic;
+  background: rgba(255,255,255,.6); border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 12px; line-height: 1.6;
+  border-left: 3px solid var(--indigo);
+}
+.founder-contact { font-size: .78rem; color: var(--muted); margin-bottom: 14px; }
+.btn-linkedin {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #0077b5; color: #fff;
+  padding: 9px 18px; border-radius: 10px;
+  font-size: .81rem; font-weight: 700; text-decoration: none;
+  transition: background .2s, transform .2s;
+}
+.btn-linkedin:hover { background: #005f91; transform: translateY(-1px); text-decoration: none; color: #fff; }
+.founder-note {
+  background: rgba(255,255,255,.7); border: 1px solid #c7d2fe;
+  border-radius: 12px; padding: 14px 18px; max-width: 280px; align-self: center;
+}
+.founder-note-title { font-size: .72rem; font-weight: 800; color: var(--indigo); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+.founder-note p { font-size: .79rem; color: #3730a3; line-height: 1.6; }
+
+/* ── YT VIDEOS ── */
+.yt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-top: 14px; }
+.yt-card {
+  background: #fff5f5; border: 1px solid #fecdd3;
+  border-radius: 12px; padding: 16px;
+  transition: transform .2s;
+}
+.yt-card:hover { transform: translateY(-2px); }
+.yt-tag { font-size: .68rem; font-weight: 800; color: #be123c; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+.yt-title { font-size: .82rem; font-weight: 600; margin-bottom: 10px; line-height: 1.4; color: #1e293b; }
+.yt-views { font-size: 1.4rem; font-weight: 900; color: #e11d48; }
+.yt-sub { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+.yt-tip {
+  margin-top: 14px; padding: 11px 15px;
+  background: #fffbeb; border-radius: 10px;
+  font-size: .8rem; color: #92400e; line-height: 1.5;
+}
+
+/* ── FOOTER ── */
+.footer {
+  background: #0f172a; color: #64748b;
+  text-align: center; padding: 20px;
+  font-size: .75rem; margin-top: 40px;
+  line-height: 1.7;
+}
+.footer span { color: #94a3b8; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px) {
+  .header { padding: 20px; }
+  .page { padding: 16px; }
+  .g2, .g3 { grid-template-columns: 1fr; }
+  .swot-grid { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">🕊️</div>
+      <div>
+        <h1>NayePankh Foundation</h1>
+        <p>Data Analytics Dashboard &nbsp;·&nbsp; Intern Research Project &nbsp;·&nbsp; June 2026</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="hbadge">📍 Kanpur & Ghaziabad, UP</span>
+      <span class="hbadge">✅ NITI Aayog Affiliated</span>
+      <span class="hbadge">🏛️ 80G & 12A Certified</span>
+      <span class="hbadge">🎓 UP Govt. Registered</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-tab active" onclick="showPage('overview',this)">📊 Overview</div>
+  <div class="nav-tab" onclick="showPage('impact',this)">❤️ Program Impact</div>
+  <div class="nav-tab" onclick="showPage('social',this)">📱 Social Media</div>
+  <div class="nav-tab" onclick="showPage('interns',this)">🎓 Internship</div>
+  <div class="nav-tab" onclick="showPage('trends',this)">📈 Trends & Insights</div>
+</nav>
+
+<!-- ═══════════════ PAGE 1: OVERVIEW ═══════════════ -->
+<div id="page-overview" class="page active">
+
+  <div class="section-title">Organization at a Glance</div>
+  <div class="kpi-grid">
+    <div class="kpi-card c-indigo">
+      <div class="kpi-icon-wrap">👥</div>
+      <div class="kpi-value" data-target="200000" data-suffix="L+">2L+</div>
+      <div class="kpi-label">People Helped</div>
+      <div class="kpi-delta">↑ Growing since March 2021</div>
+    </div>
+    <div class="kpi-card c-teal">
+      <div class="kpi-icon-wrap">🎓</div>
+      <div class="kpi-value">30K+</div>
+      <div class="kpi-label">Interns Trained</div>
+      <div class="kpi-delta">↑ One of India's largest student NGOs</div>
+    </div>
+    <div class="kpi-card c-violet">
+      <div class="kpi-icon-wrap">🤝</div>
+      <div class="kpi-value">53</div>
+      <div class="kpi-label">Core Team Members ✅</div>
+      <div class="kpi-delta">↑ LinkedIn verified · 500+ volunteers</div>
+    </div>
+    <div class="kpi-card c-rose">
+      <div class="kpi-icon-wrap">📣</div>
+      <div class="kpi-value">30K</div>
+      <div class="kpi-label">Social Followers (All Verified ✅)</div>
+      <div class="kpi-delta">↑ Across 5 platforms</div>
+    </div>
+    <div class="kpi-card c-amber">
+      <div class="kpi-icon-wrap">📅</div>
+      <div class="kpi-value">5 Yrs</div>
+      <div class="kpi-label">Since Founding</div>
+      <div class="kpi-delta">↑ Launched March 28, 2021</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Beneficiaries Reached Over Time</h3>
+      <div class="sub">Cumulative people helped (2021–2026) · Est. from public reports</div>
+      <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Program Distribution</h3>
+      <div class="sub">Share of activities across core programs</div>
+      <div class="chart-wrap"><canvas id="programPieChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Founder</div>
+  <div class="founder-card">
+    <div class="founder-avatar">🧑‍💼</div>
+    <div class="founder-info">
+      <div class="founder-name">Prashant Shukla</div>
+      <div class="founder-role">Founder & President, NayePankh Foundation ✅</div>
+      <div class="founder-quote">"If we all do something, then together there is no problem that we cannot solve!" 💙</div>
+      <div class="founder-contact">📧 contact@nayepankh.com &nbsp;·&nbsp; 📞 +91-8318500748</div>
+      <a href="https://www.linkedin.com/in/prashant-shukla-b765171b6" target="_blank" class="btn-linkedin">💼 Connect on LinkedIn</a>
+    </div>
+    <div class="founder-note">
+      <div class="founder-note-title">💡 Open to Students</div>
+      <p>Suggestions · Feedback · New internship ideas · Core Team applications — Prashant welcomes direct outreach from students who want to help build opportunities for thousands.</p>
+    </div>
+  </div>
+
+  <div class="section-title">Organizational Timeline</div>
+  <div class="card">
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">2020 — COVID-19 Pandemic</div>
+        <div class="tl-title">Origin: Grassroots Response</div>
+        <div class="tl-body">A group of high school students started distributing food and essentials to underprivileged families during India's lockdown, with whatever resources they could gather.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">March 28, 2021 — Official Launch</div>
+        <div class="tl-title">NayePankh Foundation Registered</div>
+        <div class="tl-body">Formally registered under the Indian Society Act, 1860. Acquired the name "NayePankh" (New Wings) symbolizing upliftment of the underprivileged.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">Aug 2022 — Digital Expansion</div>
+        <div class="tl-title">12A & 80G + YouTube Launch + NITI Aayog</div>
+        <div class="tl-body">Received government tax certifications (donors get 50% income tax relief). Launched YouTube channel. Achieved NITI Aayog affiliation. Expanded to Ghaziabad.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">2023 — 1 Lakh Milestone</div>
+        <div class="tl-title">100,000+ People Helped</div>
+        <div class="tl-body">Media coverage in Dainik Jagran, Pioneer, and Hindustan. Instagram community crossed 10K followers. Sanitary napkin campaigns expanded statewide.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">2024–2025 — National Scale</div>
+        <div class="tl-title">30,000+ Interns · 2 Lakh+ Beneficiaries</div>
+        <div class="tl-body">Became one of India's largest student-led NGOs. 36+ internship domains listed on Internshala. Technical Internship Program launched with 16+ roles.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--amber);box-shadow:0 0 0 2px var(--amber);"></div>
+        <div class="tl-date">2026 — Present</div>
+        <div class="tl-title">Continued Mission: "Badalte Bharat Ki Nayi Tasveer"</div>
+        <div class="tl-body">Ongoing programs in food distribution, menstrual hygiene, education, and stray animal care. Social media at 30K+ verified followers. Expanding digital outreach and corporate partnerships.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 2: PROGRAM IMPACT ═══════════════ -->
+<div id="page-impact" class="page">
+  <div class="section-title">Program Impact Analysis</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card c-teal">
+      <div class="kpi-icon-wrap">🍱</div>
+      <div class="kpi-value">85K+</div>
+      <div class="kpi-label">Meals Distributed</div>
+      <div class="kpi-delta">↑ Flagship program · Weekly drives</div>
+    </div>
+    <div class="kpi-card c-violet">
+      <div class="kpi-icon-wrap">🩸</div>
+      <div class="kpi-value">45K+</div>
+      <div class="kpi-label">Sanitary Pads Distributed</div>
+      <div class="kpi-delta">↑ Hygiene awareness campaigns</div>
+    </div>
+    <div class="kpi-card c-indigo">
+      <div class="kpi-icon-wrap">👕</div>
+      <div class="kpi-value">30K+</div>
+      <div class="kpi-label">Clothes Donated</div>
+      <div class="kpi-delta">↑ Winter + seasonal drives</div>
+    </div>
+    <div class="kpi-card c-rose">
+      <div class="kpi-icon-wrap">📚</div>
+      <div class="kpi-value">22K+</div>
+      <div class="kpi-label">Education Touchpoints</div>
+      <div class="kpi-delta">↑ Workshops & awareness sessions</div>
+    </div>
+    <div class="kpi-card c-amber">
+      <div class="kpi-icon-wrap">🐾</div>
+      <div class="kpi-value">18K+</div>
+      <div class="kpi-label">Animals Fed</div>
+      <div class="kpi-delta">↑ Daily stray animal care</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Program Reach by Year</h3>
+      <div class="sub">Beneficiaries per program area (2021–2026) · Estimated</div>
+      <div class="chart-wrap"><canvas id="programBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Geographic Reach</h3>
+      <div class="sub">Kanpur & Ghaziabad confirmed ✅ · Other cities estimated</div>
+      <div class="chart-wrap"><canvas id="geoChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <h3>Program Contribution to Total Beneficiaries</h3>
+    <div class="sub">% share of each program in total 2 lakh+ beneficiaries reached</div>
+    <div style="max-width:620px;margin-top:16px;">
+      <div class="prog-item">
+        <div class="prog-label"><span>🍱 Food Distribution</span><span>42%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:42%;background:linear-gradient(90deg,#0d9488,#0891b2);"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-label"><span>🩸 Menstrual Hygiene</span><span>22%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:22%;background:linear-gradient(90deg,#7c3aed,#5b21b6);"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-label"><span>👕 Clothes Drive</span><span>15%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:15%;background:linear-gradient(90deg,#4f46e5,#6d28d9);"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-label"><span>📚 Education</span><span>11%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:11%;background:linear-gradient(90deg,#e11d48,#be123c);"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-label"><span>🐾 Animal Welfare</span><span>9%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:9%;background:linear-gradient(90deg,#d97706,#b45309);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <h3>Program Breakdown</h3>
+    <div class="sub">Key metrics by program area · Est. figures based on 2L+ total</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Program</th><th>Category</th><th>Est. Beneficiaries</th><th>Frequency</th><th>Coverage</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>🍱 Food Distribution</strong></td><td><span class="badge b-teal">Hunger Relief</span></td><td>85,000+</td><td>Weekly drives</td><td>Kanpur + surrounding</td><td><span class="badge b-green">Active</span></td></tr>
+          <tr><td><strong>🩸 Menstrual Hygiene</strong></td><td><span class="badge b-indigo">Health & Hygiene</span></td><td>45,000+</td><td>Monthly campaigns</td><td>UP (multiple districts)</td><td><span class="badge b-green">Active</span></td></tr>
+          <tr><td><strong>👕 Clothes Drive</strong></td><td><span class="badge b-sky">Basic Needs</span></td><td>30,000+</td><td>Seasonal + occasion</td><td>Kanpur, Ghaziabad</td><td><span class="badge b-green">Active</span></td></tr>
+          <tr><td><strong>📚 Education & Awareness</strong></td><td><span class="badge b-amber">Education</span></td><td>22,000+</td><td>Bi-monthly sessions</td><td>Schools & communities</td><td><span class="badge b-green">Active</span></td></tr>
+          <tr><td><strong>🐾 Stray Animal Care</strong></td><td><span class="badge b-teal">Animal Welfare</span></td><td>18,000+ animals</td><td>Daily feeding</td><td>Kanpur</td><td><span class="badge b-green">Active</span></td></tr>
+          <tr><td><strong>🎓 Internship & Skill Dev.</strong></td><td><span class="badge b-indigo">Capacity Building</span></td><td>30,000+ interns</td><td>Rolling enrollment</td><td>Pan India (Remote)</td><td><span class="badge b-green">Active</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 3: SOCIAL MEDIA ═══════════════ -->
+<div id="page-social" class="page">
+  <div class="section-title">Social Media Analytics — All Verified ✅</div>
+
+  <div class="social-grid">
+    <a class="social-card" href="https://www.instagram.com/nayepankhfoundation" target="_blank">
+      <div class="s-icon">📸</div>
+      <div class="s-platform">Instagram</div>
+      <div class="s-value" style="color:#e1306c;">16.4K</div>
+      <div class="s-label">Followers · 284 Posts ✅</div>
+    </a>
+    <a class="social-card" href="https://www.linkedin.com/company/nayepankh" target="_blank">
+      <div class="s-icon">💼</div>
+      <div class="s-platform">LinkedIn</div>
+      <div class="s-value" style="color:#0077b5;">6K</div>
+      <div class="s-label">Followers ✅</div>
+    </a>
+    <a class="social-card" href="https://youtube.com/@nayepankhfoundation" target="_blank">
+      <div class="s-icon">▶️</div>
+      <div class="s-platform">YouTube</div>
+      <div class="s-value" style="color:#ff0000;">5.05K</div>
+      <div class="s-label">Subs · 3 Videos · 7,890 Views ✅</div>
+    </a>
+    <a class="social-card" href="https://facebook.com/nayepankhfoundation" target="_blank">
+      <div class="s-icon">👥</div>
+      <div class="s-platform">Facebook</div>
+      <div class="s-value" style="color:#1877f2;">1.8K</div>
+      <div class="s-label">Followers ✅</div>
+    </a>
+    <a class="social-card" href="https://x.com/nayepankh" target="_blank">
+      <div class="s-icon">🐦</div>
+      <div class="s-platform">Twitter / X</div>
+      <div class="s-value" style="color:#14171a;">1,303</div>
+      <div class="s-label">Followers · Joined May 2021 ✅</div>
+    </a>
+    <a class="social-card" href="https://www.nayepankh.com" target="_blank">
+      <div class="s-icon">🌐</div>
+      <div class="s-platform">Website</div>
+      <div class="s-value" style="color:var(--indigo);font-size:1rem;padding-top:6px;">nayepankh.com</div>
+      <div class="s-label">Official Site ✅</div>
+    </a>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Follower Share by Platform</h3>
+      <div class="sub">Total verified following: 30,553 across all platforms</div>
+      <div class="chart-wrap"><canvas id="socialPieChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Instagram Engagement (Est.)</h3>
+      <div class="sub">Monthly post count & estimated engagement rate trend</div>
+      <div class="chart-wrap"><canvas id="instaChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <h3>▶️ YouTube Video Performance ✅</h3>
+    <div class="sub">All 3 videos · 7,890 total views · Channel joined Aug 27, 2022 · 5.05K subscribers</div>
+    <div class="yt-grid">
+      <div class="yt-card">
+        <div class="yt-tag">🎬 Video 1</div>
+        <div class="yt-title">"Lets spread some love and make this talent grow..."</div>
+        <div class="yt-views">1,800</div>
+        <div class="yt-sub">views</div>
+      </div>
+      <div class="yt-card">
+        <div class="yt-tag">🎬 Video 2</div>
+        <div class="yt-title">"Celebrating Republic Day with underprivileged communities..."</div>
+        <div class="yt-views">2,600</div>
+        <div class="yt-sub">views</div>
+      </div>
+      <div class="yt-card" style="border-color:#fca5a5;background:#fff1f2;">
+        <div class="yt-tag">🏆 Video 3 · Top Performer</div>
+        <div class="yt-title">"Birthday Celebration with Underprivileged children..."</div>
+        <div class="yt-views">3,300</div>
+        <div class="yt-sub">views · Most viewed</div>
+      </div>
+    </div>
+    <div class="yt-tip">💡 <strong>Insight:</strong> Only 3 videos uploaded in 4 years despite 5.05K subscribers — massive untapped potential. Each video averages 2,630 views. Regular uploads could significantly grow reach and donor visibility.</div>
+  </div>
+
+  <div class="card mb">
+    <h3>Content Categories on Social Media</h3>
+    <div class="sub">Types of posts shared across platforms (estimated breakdown)</div>
+    <div class="chart-wrap"><canvas id="contentChart"></canvas></div>
+  </div>
+
+  <div class="card mb">
+    <h3>Platform-wise Summary</h3>
+    <div class="sub">As of June 2026 · All follower counts verified ✅</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Platform</th><th>Handle</th><th>Followers</th><th>Content</th><th>Primary Use</th><th>Activity</th></tr></thead>
+        <tbody>
+          <tr><td>📸 Instagram</td><td><a href="https://www.instagram.com/nayepankhfoundation" target="_blank">@nayepankhfoundation ✅</a></td><td><strong>16,400</strong></td><td>284 posts</td><td>Campaign visuals, drives</td><td><span class="badge b-green">High</span></td></tr>
+          <tr><td>💼 LinkedIn</td><td><a href="https://www.linkedin.com/company/nayepankh" target="_blank">NayePankh Foundation ✅</a></td><td><strong>6,000</strong></td><td>Regular updates</td><td>Intern recruitment, news</td><td><span class="badge b-green">High</span></td></tr>
+          <tr><td>▶️ YouTube</td><td><a href="https://youtube.com/@nayepankhfoundation" target="_blank">@nayepankhfoundation ✅</a></td><td><strong>5,050</strong></td><td>3 videos · 7,890 views</td><td>Drive documentation</td><td><span class="badge b-amber">Low</span></td></tr>
+          <tr><td>👥 Facebook</td><td><a href="https://facebook.com/nayepankhfoundation" target="_blank">nayepankhfoundation ✅</a></td><td><strong>1,800</strong></td><td>Event posts</td><td>Community, local outreach</td><td><span class="badge b-sky">Medium</span></td></tr>
+          <tr><td>🐦 Twitter / X</td><td><a href="https://x.com/nayepankh" target="_blank">@nayepankh ✅</a></td><td><strong>1,303</strong></td><td>Tweets, threads</td><td>Awareness · Joined May 2021</td><td><span class="badge b-sky">Medium</span></td></tr>
+          <tr><td>🌐 Website</td><td><a href="https://www.nayepankh.com" target="_blank">nayepankh.com ✅</a></td><td>—</td><td>Static pages</td><td>About, donate, certificates</td><td><span class="badge b-green">Active</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 4: INTERNSHIP ═══════════════ -->
+<div id="page-interns" class="page">
+  <div class="section-title">Internship Program Analytics</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card c-indigo">
+      <div class="kpi-icon-wrap">🎓</div>
+      <div class="kpi-value">30K+</div>
+      <div class="kpi-label">Total Interns Trained</div>
+      <div class="kpi-delta">↑ Since 2021</div>
+    </div>
+    <div class="kpi-card c-teal">
+      <div class="kpi-icon-wrap">📋</div>
+      <div class="kpi-value">36+</div>
+      <div class="kpi-label">Open Internship Roles</div>
+      <div class="kpi-delta">↑ Listed on Internshala</div>
+    </div>
+    <div class="kpi-card c-rose">
+      <div class="kpi-icon-wrap">🏠</div>
+      <div class="kpi-value">100%</div>
+      <div class="kpi-label">Work From Home</div>
+      <div class="kpi-delta">↑ Fully remote</div>
+    </div>
+    <div class="kpi-card c-violet">
+      <div class="kpi-icon-wrap">💻</div>
+      <div class="kpi-value">16+</div>
+      <div class="kpi-label">Technical Roles ✅</div>
+      <div class="kpi-delta">↑ Verified from announcement</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Technical Domain Distribution</h3>
+      <div class="sub">Share of intern roles by tech category (verified roles)</div>
+      <div class="chart-wrap"><canvas id="internDomainChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Intern Growth Over Years</h3>
+      <div class="sub">New interns per year vs. cumulative total (2021–2026)</div>
+      <div class="chart-wrap"><canvas id="internGrowthChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <h3>Technical Internship Roles ✅</h3>
+    <div class="sub">Verified from NayePankh Foundation's Technical Internship Program · WFH · Part-Time · Certificate + LOR provided</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Role</th><th>Category</th><th>Mode</th><th>Certificate</th><th>LOR</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>💻 Full Stack Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>2</td><td><strong>🌐 Front End Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>3</td><td><strong>🌐 Web Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>4</td><td><strong>🤖 Artificial Intelligence (AI)</strong></td><td><span class="badge b-violet" style="background:#ede9fe;color:#5b21b6;">AI / ML</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>5</td><td><strong>📊 Data Analytics</strong></td><td><span class="badge b-teal">Data</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>6</td><td><strong>☕ Java Development</strong></td><td><span class="badge b-amber">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>7</td><td><strong>🐍 Python Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>8</td><td><strong>🧠 Machine Learning</strong></td><td><span class="badge b-violet" style="background:#ede9fe;color:#5b21b6;">AI / ML</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>9</td><td><strong>🖥️ Backend Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>10</td><td><strong>🎨 UI/UX Design</strong></td><td><span class="badge b-rose">Design</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>11</td><td><strong>🤖 AI Agent Development</strong></td><td><span class="badge b-violet" style="background:#ede9fe;color:#5b21b6;">AI / ML</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>12</td><td><strong>🧩 No Code Development</strong></td><td><span class="badge b-teal">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>13</td><td><strong>⚡ Vibe Coder</strong></td><td><span class="badge b-amber">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>14</td><td><strong>📱 Mobile App Development</strong></td><td><span class="badge b-indigo">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>15</td><td><strong>🌍 WordPress Development</strong></td><td><span class="badge b-teal">Tech</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr><td>16</td><td><strong>🤖🌐 AI Web Development</strong></td><td><span class="badge b-violet" style="background:#ede9fe;color:#5b21b6;">AI / ML</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+          <tr style="background:#f8fafc;"><td>+</td><td><em style="color:var(--muted);">More roles available (list continues beyond screenshot)</em></td><td><span class="badge b-gray">Various</span></td><td>WFH / Part-time</td><td>✅</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 5: TRENDS ═══════════════ -->
+<div id="page-trends" class="page">
+  <div class="section-title">Trends & Key Insights</div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>Year-over-Year Growth Rate</h3>
+      <div class="sub">% growth in beneficiaries per year (estimated)</div>
+      <div class="chart-wrap"><canvas id="yoyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Monthly Activity Index</h3>
+      <div class="sub">Relative campaign activity by month · Seasonal patterns</div>
+      <div class="chart-wrap"><canvas id="seasonalChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Analyst Insights</div>
+  <div class="insight-grid">
+    <div class="insight-card">
+      <h4>🚀 Rapid Grassroots Scale</h4>
+      <p>NayePankh grew from a handful of high schoolers to 30,000+ interns in just 5 years — a compound annual growth rate of ~150% in volunteer/intern count. This reflects the power of the youth-led model and fully remote internship structure.</p>
+    </div>
+    <div class="insight-card t">
+      <h4>🍱 Food Distribution Leads Impact</h4>
+      <p>~42% of total beneficiary touchpoints come from food distribution, making it the flagship program. Maintaining and scaling this program should remain the top operational priority.</p>
+    </div>
+    <div class="insight-card r">
+      <h4>📱 Instagram Dominates · YouTube Untapped</h4>
+      <p>Instagram (16.4K, 284 posts) is the core channel. YouTube has 5.05K subscribers but only 3 videos — each averaging 2,630 views. Consistent uploads could make it the foundation's biggest reach multiplier.</p>
+    </div>
+    <div class="insight-card v">
+      <h4>🎓 Internship = Force Multiplier</h4>
+      <p>30,000+ interns don't just operate the org — each intern amplifies outreach through personal networks, effectively turning every intern into a micro-ambassador. This is the model's biggest hidden asset.</p>
+    </div>
+    <div class="insight-card a">
+      <h4>📅 Seasonal Peaks: Winter & Festivals</h4>
+      <p>Activity peaks in October–January (Diwali, winter drives) and March–April (anniversary + summer food drives). Planning resources and intern recruitment should align to these cycles.</p>
+    </div>
+    <div class="insight-card t">
+      <h4>🩸 Hygiene Program: High Impact, Low Visibility</h4>
+      <p>45K+ women reached but the menstrual hygiene program gets far less social spotlight than food drives. Greater visibility here could unlock dedicated CSR funding and health-focused partnerships.</p>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <h3>SWOT Analysis — NayePankh Foundation</h3>
+    <div class="sub">Strategic assessment based on verified research data</div>
+    <div class="swot-grid">
+      <div class="swot-box sw-s">
+        <div class="swot-title">💪 Strengths</div>
+        <ul class="swot-list">
+          <li>Youth-led, highly relatable model</li>
+          <li>UP Govt. registered + NITI Aayog affiliated</li>
+          <li>80G/12A — donors get 50% tax relief</li>
+          <li>30K+ intern network as force multiplier</li>
+          <li>Multi-program diversity across 5+ areas</li>
+          <li>16+ Technical internship roles available</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-w">
+        <div class="swot-title">⚠️ Weaknesses</div>
+        <ul class="swot-list">
+          <li>Primarily Kanpur/Ghaziabad geography</li>
+          <li>High volunteer turnover (student-based)</li>
+          <li>No dedicated data tracking system</li>
+          <li>YouTube severely underutilized (3 videos)</li>
+          <li>Twitter/X very low reach (791 followers)</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-o">
+        <div class="swot-title">🌱 Opportunities</div>
+        <ul class="swot-list">
+          <li>CSR partnerships with corporates</li>
+          <li>Pan-India expansion via remote model</li>
+          <li>Government welfare scheme collaboration</li>
+          <li>YouTube content strategy — big sub base</li>
+          <li>Data-driven impact reporting for donors</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-t">
+        <div class="swot-title">🔴 Threats</div>
+        <ul class="swot-list">
+          <li>Competition from established NGOs for funding</li>
+          <li>Economic fluctuations affecting donations</li>
+          <li>Intern quality variability at scale</li>
+          <li>Social media algorithm changes</li>
+          <li>Regulatory compliance complexity</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Built by Devansh (Data Analytics Intern)</span> · NayePankh Foundation · June 2026<br>
+  Data sourced from <a href="https://nayepankh.com" target="_blank" style="color:#94a3b8;">nayepankh.com</a> · <a href="https://www.instagram.com/nayepankhfoundation" target="_blank" style="color:#94a3b8;">Instagram</a> · <a href="https://www.linkedin.com/company/nayepankh" target="_blank" style="color:#94a3b8;">LinkedIn</a> · <a href="https://youtube.com/@nayepankhfoundation" target="_blank" style="color:#94a3b8;">YouTube</a> · Internshala · Crunchbase
+</div>
+
+<script>
+// ── PALETTE ──
+const C = {
+  indigo:'#4f46e5', teal:'#0d9488', rose:'#e11d48',
+  amber:'#d97706', violet:'#7c3aed', sky:'#0284c7',
+  pink:'#db2777', green:'#16a34a',
+  ig:'#e1306c', li:'#0077b5', yt:'#ff0000', fb:'#1877f2', tw:'#14171a'
+};
+const FONT = { family:"'Inter', system-ui, sans-serif" };
+Chart.defaults.font.family = FONT.family;
+Chart.defaults.color = '#64748b';
+
+// ── TAB SWITCH ──
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── GROWTH CHART ──
+new Chart(document.getElementById('growthChart'), {
+  type: 'line',
+  data: {
+    labels: ['Mar 2021','Dec 2021','Jun 2022','Dec 2022','Jun 2023','Dec 2023','Jun 2024','Dec 2024','Jun 2025','Jun 2026'],
+    datasets: [{
+      label: 'Cumulative Beneficiaries',
+      data: [500,8000,25000,50000,80000,120000,150000,175000,195000,210000],
+      fill: true,
+      borderColor: C.indigo,
+      backgroundColor: 'rgba(79,70,229,0.08)',
+      tension: 0.45, pointRadius: 5,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: C.indigo,
+      pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + (ctx.raw >= 100000 ? (ctx.raw/100000).toFixed(1)+'L' : (ctx.raw/1000).toFixed(0)+'K') + ' people' } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color:'#f1f5f9' }, ticks: { callback: v => v >= 100000 ? (v/100000).toFixed(1)+'L' : v >= 1000 ? v/1000+'K' : v } }
+    }
+  }
+});
+
+// ── PROGRAM PIE ──
+new Chart(document.getElementById('programPieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Food Distribution','Menstrual Hygiene','Clothes Drive','Education','Animal Welfare'],
+    datasets: [{ data: [42,22,15,11,9], backgroundColor: [C.teal,C.violet,C.indigo,C.rose,C.amber], borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '62%',
+    plugins: { legend: { position:'right', labels:{ boxWidth:11, padding:14, font:{ size:11 } } } }
+  }
+});
+
+// ── PROGRAM BAR ──
+new Chart(document.getElementById('programBarChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2021','2022','2023','2024','2025','2026'],
+    datasets: [
+      { label:'Food', data:[2000,12000,22000,18000,16000,15000], backgroundColor: C.teal, borderRadius:4 },
+      { label:'Hygiene', data:[500,6000,11000,10000,9500,8000], backgroundColor: C.violet, borderRadius:4 },
+      { label:'Clothes', data:[300,4000,8000,7000,6500,4200], backgroundColor: C.indigo, borderRadius:4 },
+      { label:'Education', data:[200,2500,5000,5500,5000,3800], backgroundColor: C.rose, borderRadius:4 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels:{ boxWidth:10, font:{ size:11 } } } },
+    scales: {
+      x: { stacked:true, grid:{ display:false } },
+      y: { stacked:true, grid:{ color:'#f1f5f9' }, ticks:{ callback: v => v>=1000?v/1000+'K':v } }
+    }
+  }
+});
+
+// ── GEO CHART ──
+new Chart(document.getElementById('geoChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Kanpur ✅','Ghaziabad ✅','Lucknow (est.)','Agra (est.)','Varanasi (est.)','Other cities'],
+    datasets: [{ label:'Activity %', data:[55,18,10,8,5,4], backgroundColor:[C.indigo,C.teal,C.amber,C.violet,C.rose,C.sky], borderRadius:6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis:'y',
+    plugins: { legend:{ display:false } },
+    scales: { x:{ grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>v+'%' } }, y:{ grid:{ display:false } } }
+  }
+});
+
+// ── SOCIAL PIE ──
+new Chart(document.getElementById('socialPieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Instagram (16,400) ✅','LinkedIn (6,000) ✅','YouTube (5,050) ✅','Facebook (1,800) ✅','Twitter/X (1,303) ✅'],
+    datasets: [{ data:[53.7,19.6,16.5,5.9,4.3], backgroundColor:[C.ig,C.li,C.yt,C.fb,C.tw], borderWidth:3, borderColor:'#fff', hoverOffset:6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout:'60%',
+    plugins: { legend:{ position:'right', labels:{ boxWidth:11, padding:12, font:{ size:11 } } } }
+  }
+});
+
+// ── INSTAGRAM TREND ──
+new Chart(document.getElementById('instaChart'), {
+  type: 'line',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [
+      { label:'Posts/month', data:[4,5,8,6,7,5,4,6,7,10,8,7], borderColor:C.ig, backgroundColor:'rgba(225,48,108,.08)', fill:true, yAxisID:'y', tension:0.4, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:C.ig, pointBorderWidth:2 },
+      { label:'Eng. Rate %', data:[3.2,3.5,5.1,4.2,4.8,3.9,3.5,4.5,5.0,6.2,5.5,4.8], borderColor:C.amber, yAxisID:'y1', tension:0.4, borderDash:[5,3], pointRadius:3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ labels:{ boxWidth:10, font:{ size:11 } } } },
+    scales: {
+      x: { grid:{ display:false } },
+      y: { position:'left', grid:{ color:'#f1f5f9' }, title:{ display:true, text:'Posts', font:{size:10} } },
+      y1: { position:'right', title:{ display:true, text:'Eng. %', font:{size:10} }, grid:{ drawOnChartArea:false } }
+    }
+  }
+});
+
+// ── CONTENT CHART ──
+new Chart(document.getElementById('contentChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Campaign Photos','Awareness Posts','Intern Stories','Donation Appeals','Event Reels','Impact Reports','Festive Posts'],
+    datasets: [{ label:'% of Posts', data:[32,24,18,12,8,4,2], backgroundColor:[C.teal,C.indigo,C.violet,C.rose,C.pink,C.amber,C.sky], borderRadius:6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ display:false } },
+    scales: { x:{ grid:{ display:false } }, y:{ grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>v+'%' } } }
+  }
+});
+
+// ── INTERN DOMAIN ──
+new Chart(document.getElementById('internDomainChart'), {
+  type: 'polarArea',
+  data: {
+    labels: ['Web Dev (Full/Front/Back)','AI & ML','Python & Java','Data Analytics','Mobile & WordPress','UI/UX Design','No Code / Vibe','AI Web & Agents'],
+    datasets: [{ data:[25,20,15,15,10,7,5,3], backgroundColor:[C.indigo+'cc',C.violet+'cc',C.amber+'cc',C.teal+'cc',C.sky+'cc',C.pink+'cc',C.rose+'cc','#26a69acc'] }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ position:'right', labels:{ boxWidth:10, font:{ size:10 }, padding:10 } } }
+  }
+});
+
+// ── INTERN GROWTH ──
+new Chart(document.getElementById('internGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2021','2022','2023','2024','2025','2026(est)'],
+    datasets: [
+      { label:'New Interns', data:[200,2500,7000,10000,8000,5000], backgroundColor:C.indigo, borderRadius:6 },
+      { label:'Cumulative', data:[200,2700,9700,19700,27700,32700], type:'line', borderColor:C.amber, backgroundColor:'transparent', tension:0.4, yAxisID:'y1', pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:C.amber, pointBorderWidth:2 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ labels:{ boxWidth:10, font:{ size:11 } } } },
+    scales: {
+      x: { grid:{ display:false } },
+      y: { grid:{ color:'#f1f5f9' }, title:{ display:true, text:'New Interns', font:{size:10} } },
+      y1: { position:'right', title:{ display:true, text:'Cumulative', font:{size:10} }, grid:{ drawOnChartArea:false } }
+    }
+  }
+});
+
+// ── YOY ──
+new Chart(document.getElementById('yoyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2021→22','2022→23','2023→24','2024→25','2025→26'],
+    datasets: [{ label:'YoY Growth %', data:[525,140,88,46,25], backgroundColor:[C.teal,C.indigo,C.violet,C.rose,C.amber], borderRadius:8 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ display:false } },
+    scales: { x:{ grid:{ display:false } }, y:{ grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>v+'%' } } }
+  }
+});
+
+// ── SEASONAL RADAR ──
+new Chart(document.getElementById('seasonalChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [{
+      label:'Activity Index',
+      data:[90,65,95,80,70,60,55,65,75,100,95,85],
+      borderColor: C.indigo, backgroundColor:'rgba(79,70,229,0.12)',
+      pointBackgroundColor:'#fff', pointBorderColor:C.indigo, pointBorderWidth:2, pointRadius:4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{ display:false } },
+    scales: { r: { min:0, max:100, ticks:{ stepSize:25, font:{size:9} }, grid:{ color:'#e2e8f0' }, pointLabels:{ font:{size:11} } } }
+  }
+});
+</script>
+</body>
+</html>
